@@ -1,0 +1,23 @@
+{
+  "name": "skills-vault",
+  "owner": {
+    "name": "Kavin Kumar"
+  },
+  "description": "Personal vault of custom skills — organized by family, installable individually via the BMad installer.",
+  "plugins": [
+    {
+      "name": "bmad-skills",
+      "source": "./src/bmad-skills",
+      "description": "PR lifecycle skills for the BMad Method: PR describe, Copilot review closure, and human reviewer response.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Kavin Kumar"
+      },
+      "skills": [
+        "./src/bmad-skills/bmad-pr-describe",
+        "./src/bmad-skills/bmad-copilot-review-closure",
+        "./src/bmad-skills/bmad-pr-reviewer-response"
+      ]
+    }
+  ]
+}

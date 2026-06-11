@@ -1,0 +1,4 @@
+code: custom-pr-skills
+name: "Custom PR Skills"
+description: "Custom PR review skills: Copilot review closure and human reviewer response"
+default_selected: true

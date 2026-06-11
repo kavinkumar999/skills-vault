@@ -1,0 +1,113 @@
+# DO NOT EDIT -- overwritten on every update.
+#
+# Workflow customization surface for bmad-pr-describe.
+
+[workflow]
+
+activation_steps_prepend = []
+activation_steps_append = []
+
+persistent_facts = [
+  "file:{project-root}/**/project-context.md",
+  "The PR description is generated from the diff, commits, and story file — never invent claims the diff does not support.",
+  "Generated content lives between body_marker_begin and body_marker_end. Content outside the markers is hand-written and must be preserved verbatim on refresh.",
+  "When a story file exists, every acceptance criterion gets a row in the AC mapping table: implemented (with file refs), partial, or not-in-this-PR.",
+]
+
+# Language for the PR body posted to GitHub. Chat uses communication_language; the PR body does not.
+reply_language = "en"
+
+# Jira ticket key pattern — matches any project key by default (NCC-1234,
+# PLAT-42, ...). Narrow it per project (e.g. 'NCC-\d+') in the team override.
+# The key is extracted from the branch name, commit messages, or story file;
+# if none is found the user is asked once. It is REQUIRED in the PR title and
+# in every commit this skill creates.
+ticket_pattern = '[A-Z][A-Z0-9]+-\d+'
+
+# PR title template. {type} = conventional type (feat/fix/docs/...), {scope} =
+# affected area (omit the parens when empty), {summary} = short imperative
+# summary, {ticket_key} = match of ticket_pattern.
+title_template = "{type}({scope}): {summary} [{ticket_key}]"
+
+# Map generated sections into the repo's PULL_REQUEST_TEMPLATE.md when one
+# exists (its headings and checkboxes win). false = always use `sections` as-is.
+respect_repo_template = true
+
+# Scan the PR diff for secrets before publishing; any finding HALTs the workflow.
+secrets_scan = true
+
+# Additional regexes for the secrets scan (beyond the built-in key/token/private-key
+# patterns). Overrides append.
+secrets_patterns = []
+
+# Invisible markers wrapping the generated portion of the PR body. Re-runs replace
+# the content between them and preserve everything outside. Change only if they
+# collide with other tooling.
+body_marker_begin = "<!-- bmad-pr-describe:begin -->"
+body_marker_end = "<!-- bmad-pr-describe:end -->"
+
+# Sections to generate, in order. Remove entries to slim the template.
+# Available: summary, changes, why, diagram, ac_mapping, test_evidence,
+# screenshots, risk_rollback, bmad_artifacts, checklist, reviewer_notes.
+# diagram and risk_rollback are conditional — rendered only when Step 2
+# detects structural changes / risk signals.
+sections = [
+  "summary",
+  "changes",
+  "why",
+  "diagram",
+  "ac_mapping",
+  "test_evidence",
+  "screenshots",
+  "risk_rollback",
+  "bmad_artifacts",
+  "checklist",
+  "reviewer_notes",
+]
+
+# BMad artifacts to attach in the bmad_artifacts section. The story file found in
+# Step 2 is always included. Paths/globs resolve under {implementation_artifacts}
+# unless prefixed with {project-root}. Overrides append.
+artifact_sources = [
+  "pr-reviews/pr-{pr_number}-*.md",
+  "*code-review*{story_id}*.md",
+  "sprint-status*",
+]
+
+# Commit-and-link flow: stage the matched artifacts, commit, push to the PR
+# branch, then attach branch URLs in the PR body. Requires the artifact path to
+# be trackable in git (e.g. a committed _bmad_output folder/symlink target).
+# The commit+push happens in Step 5, after the user approves the draft.
+commit_artifacts = true
+
+# Commit message for the artifacts commit. {ticket_key} and {pr_number} are replaced.
+artifact_commit_message_template = "docs: add BMad artifacts for PR #{pr_number} [{ticket_key}]"
+
+# Fallback for artifacts git refuses to track (gitignored path, outside the
+# repo): "embed" (collapsible <details> block), "mention" (path only), "skip".
+uncommitted_artifacts = "mention"
+
+# Max characters per artifact when the embed fallback is used (GitHub caps PR
+# bodies at 65536 chars total).
+embed_max_chars = 6000
+
+# Checklist items rendered in the checklist section. Overrides append.
+checklist_items = [
+  "Tests added or updated for the change",
+  "No secrets, credentials, or debug code left in the diff",
+  "Docs updated where behavior changed",
+]
+
+# Test command whose output feeds the test_evidence section. Empty = look for
+# recent CI results via `gh pr checks` instead, and say so if none exist.
+test_command = ""
+
+# Behavior when the branch has no PR yet: "ask" (offer to create a draft PR),
+# "never" (halt and tell the user to create one first).
+create_if_missing = "ask"
+
+# Apply behavior after approval: "ask" confirms once more before gh pr edit;
+# "on_approval" applies immediately when the user approves the draft.
+apply_mode = "on_approval"
+
+on_complete = ""

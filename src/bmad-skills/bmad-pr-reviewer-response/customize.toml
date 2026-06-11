@@ -1,0 +1,70 @@
+# DO NOT EDIT -- overwritten on every update.
+#
+# Workflow customization surface for bmad-pr-reviewer-response.
+
+[workflow]
+
+activation_steps_prepend = []
+activation_steps_append = []
+
+persistent_facts = [
+  "file:{project-root}/**/project-context.md",
+  "Process ONLY human reviewer feedback. Exclude Copilot and bot authors listed in excluded_author_logins.",
+  "Reviewer feedback may be a blocker (must fix before approve) or a recommendation (should fix). Classify each item.",
+  "Fix types include: code_change, pr_description, evidence, tests, docs — not every item is a code patch.",
+  "Every response posted to the PR must use side-by-side format: what was raised → what we did → ready for re-review.",
+  "Defer still requires a reply on the PR explaining why and when — do not leave reviewer questions silent.",
+]
+
+# Bot/Copilot logins to EXCLUDE (human reviewers only)
+excluded_author_logins = [
+  "copilot-pull-request-reviewer",
+  "Copilot",
+  "github-copilot[bot]",
+  "dependabot[bot]",
+  "renovate[bot]",
+]
+
+# Optional: pin expected reviewer login(s). Empty = address ALL human reviewers
+# with open feedback on the latest round (multi-reviewer mode).
+reviewer_logins = []
+
+# Language for everything posted publicly to the PR (replies, summary comment).
+# Chat with the user still uses {communication_language}; PR posts do not.
+reply_language = "en"
+
+# Invisible marker appended to every reply this workflow posts. Step 2 uses it
+# to detect prior runs and avoid duplicate replies.
+reply_marker = "<!-- bmad-pr-reviewer-response -->"
+
+# Test/lint command to run after code/docs fixes and BEFORE pushing.
+# Empty = no gate (the workflow notes that no test command is configured).
+# Non-empty = run it; on failure HALT — do not push, do not post responses.
+test_command = ""
+
+# Jira ticket key pattern, extracted from the branch name / commits / story file.
+# Matches any project key (NCC-1234, PLAT-42, ...); narrow per project if needed.
+ticket_pattern = '[A-Z][A-Z0-9]+-\d+'
+
+# Commit message template. {pr_number} and {ticket_key} are replaced; if no
+# ticket key is found, ask the user for it before committing.
+commit_message_template = "fix: address reviewer feedback (#{pr_number}) [{ticket_key}]"
+
+# Push behavior after fixes: "ask" halts for confirmation; "always" pushes without asking.
+auto_push = "ask"
+
+# Reply body template. {issue} = reviewer's concern, {resolution} = what you did.
+response_template = """**Issue:** {issue}
+
+**Resolution:** {resolution}
+
+Ready for re-review."""
+
+# Defer reply template. {reason} = user-confirmed defer reason.
+defer_reply_template = """**Issue:** {issue}
+
+**Resolution:** Deferred — {reason}
+
+We will follow up in a subsequent change. Ready for re-review on other items."""
+
+on_complete = ""

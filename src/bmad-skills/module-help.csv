@@ -1,0 +1,4 @@
+module,skill,display-name,menu-code,description,action,args,phase,preceded-by,followed-by,required,output-location,outputs
+Custom PR Skills,bmad-pr-describe,PR Describe,PD,Generate or refresh the PR description from diff story file and test evidence — summary AC mapping checklist — before requesting review.,,,4-implementation,bmad-dev-story,bmad-copilot-review-closure,false,implementation_artifacts,PR description
+Custom PR Skills,bmad-copilot-review-closure,Copilot Review Closure,CP,Fetch unresolved Copilot PR comments triage fix vs defer reply on thread and resolve.,,,4-implementation,bmad-pr-describe,,false,implementation_artifacts,PR copilot closure report
+Custom PR Skills,bmad-pr-reviewer-response,PR Reviewer Response,RB,Pull human reviewer blockers and recommendations validate fix code or PR metadata post issue-resolution replies before approve.,,,4-implementation,bmad-copilot-review-closure,,false,implementation_artifacts,PR reviewer response report
