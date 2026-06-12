@@ -56,7 +56,29 @@ Draft `{generated_block}` — the content that will live between the body marker
 
    Every AC from the story gets a row. Partial or missing ACs are stated plainly — reviewers must not discover gaps themselves.
 
-6. **test_evidence** — what was run and the result (from `test_command` output or `gh pr checks`). Include suite counts and the command used. If evidence is pending, say so explicitly.
+6. **test_evidence** — render `{test_gates}` as a scannable table, then the proof, then the live CI link:
+
+   ````markdown
+   ## Test evidence
+
+   | Gate | Result |
+   | --- | --- |
+   | `:hndlbar-lib-assembled:test` | ✅ 305 tests, 0 failed |
+   | `grep -r RemovedClass` | ✅ 0 matches |
+   | Spotless (both modules) | ✅ clean |
+
+   <details><summary>Raw output (local run, {date})</summary>
+
+   ```
+   SomeSuiteTest   tests=20 failures=0
+   BUILD SUCCESSFUL in 29s
+   ```
+   </details>
+
+   CI: live status on the [Checks tab]({pr_url}/checks).
+   ````
+
+   Rules: one row per gate with ✅/❌ and the counts from Step 2 — short gate names, never full wrapped command lines (the full command belongs in the raw block). The `<details>` block embeds `{evidence_raw}` verbatim with the run date — omit the block only when no local run happened. The CI line is always the Checks-tab link; **never** render a "pending at time of writing" snapshot. A ❌ row appears only when the user explicitly chose to publish with a failing gate, with a one-line honest note.
 
 7. **screenshots** — embed user-provided paths/URLs with one-line captions. Omit the section when not UI-facing.
 

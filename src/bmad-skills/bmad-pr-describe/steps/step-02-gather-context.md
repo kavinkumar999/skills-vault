@@ -52,16 +52,18 @@
 
    - If the change introduces or alters a flow across components — new service/API call, event producer/consumer, queue, schema relationship, multi-module call chain — record `{diagram_worthy}: true` with the participants. A localized change (few files, one module) → `false`, no diagram.
 
-8. **Test evidence:**
+8. **Test evidence** — build structured `{test_gates}`, not prose:
 
-   - If `{workflow.test_command}` is non-empty: run it, capture a concise pass/fail summary (suite counts, duration) for the evidence section. On failure, tell the user — failing tests go into the description only as an honest "known failing" note if the user insists on proceeding.
-   - If empty: fetch CI status instead:
+   - Each gate is `{name, command, result: pass|fail, detail}` — `name` is a short label (task or check name, not the full command line), `detail` carries counts ("13 tests, 0 failed", "0 matches", "clean").
+   - If `{workflow.test_command}` is non-empty: run it and parse per-suite counts from the runner's output or result files (e.g. Gradle/Surefire XML `tests=/failures=/errors=`). On failure, tell the user — a failing gate goes into the description only as an honest ❌ row if the user insists on proceeding.
+   - If empty: run the project's obvious targeted tests for the changed modules when the build tool makes that evident (e.g. `:module:test`); otherwise fall back to CI:
 
      ```bash
      gh pr checks {pr_number}
      ```
 
-     Use the latest check results as evidence. If there are none (new/draft PR), the evidence section says evidence is pending — never fabricate results.
+     Use only **conclusive** check results (pass/fail) as gates. **Never snapshot pending CI as evidence** — pending states go stale the moment CI finishes; the rendered section links to the PR's Checks tab instead.
+   - Capture `{evidence_raw}`: a short tail (≤ ~30 lines) of the actual runner output — per-suite count lines and the final BUILD/summary line — with the run date. This becomes the collapsible proof block; never fabricate it.
 
 9. **Screenshots / artifacts:**
 
