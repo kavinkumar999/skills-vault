@@ -1,0 +1,72 @@
+# DO NOT EDIT -- overwritten on every update.
+#
+# Workflow customization surface for bmad-pr-review-closure.
+
+[workflow]
+
+activation_steps_prepend = []
+activation_steps_append = []
+
+persistent_facts = [
+  "file:{project-root}/**/project-context.md",
+  "Copilot threads: first-comment author must match copilot_author_logins. Every disposition ends reply + resolveReviewThread.",
+  "Human feedback: exclude excluded_author_logins. Classify blocker vs recommendation. fix_kind may be code_change, pr_description, evidence, docs, reply_only.",
+  "Defer requires a user-confirmed reason and a public reply — never leave questions unanswered.",
+  "Fetch feedback once in Step 2; build pr-{n}-feedback-index.md in Step 2b; triage from index — see _shared/token-budget.md.",
+  "Read referenced code before recommending fix vs defer vs no_action.",
+]
+
+# Default scope when user does not specify: copilot | human | both
+default_review_scope = "both"
+
+copilot_author_logins = [
+  "copilot-pull-request-reviewer",
+  "Copilot",
+  "github-copilot[bot]",
+]
+
+excluded_author_logins = [
+  "copilot-pull-request-reviewer",
+  "Copilot",
+  "github-copilot[bot]",
+  "dependabot[bot]",
+  "renovate[bot]",
+]
+
+# Empty = all human reviewers with open feedback on the latest round
+reviewer_logins = []
+
+reply_language = "en"
+
+reply_marker = "<!-- bmad-pr-review-closure -->"
+
+# Copilot reply templates
+copilot_fix_reply_template = "Addressed in this change: {summary}"
+copilot_defer_reply_template = "Deferred for now: {reason}"
+
+# Human reply templates ({issue} and {resolution} substituted)
+human_response_template = """**Issue:** {issue}
+
+**Resolution:** {resolution}
+
+Ready for re-review."""
+
+human_defer_reply_template = """**Issue:** {issue}
+
+**Resolution:** Deferred — {reason}
+
+We will follow up in a subsequent change. Ready for re-review on other items."""
+
+# Resolve human inline threads after reply: "ask" | "never" | "always"
+human_resolve_threads = "ask"
+
+test_command = ""
+ticket_pattern = '[A-Z][A-Z0-9]+-\d+'
+commit_message_template = "fix: address PR review feedback (#{pr_number}) [{ticket_key}]"
+auto_push = "ask"
+
+# --- Token budget (see _shared/token-budget.md) ---
+thread_body_max_chars = 2000
+thread_excerpt_max_chars = 160
+
+on_complete = ""

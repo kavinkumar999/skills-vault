@@ -6,48 +6,50 @@
 ## RULES
 
 - YOU MUST ALWAYS SPEAK OUTPUT in `{communication_language}`
-- Apply exactly the approved draft — no silent post-approval edits
-- If `{workflow.apply_mode}` is `"ask"`, confirm once more before touching GitHub; `"on_approval"` applies immediately
-- Update `{report_path}` after publishing — it records what went live
+- Apply the approved draft — only edit allowed: swap in verified artifact URLs after push
+- **Order:** commit + push tracked artifacts → link in body → create or update PR
+- Update `{report_path}` after publishing
 
 ## INSTRUCTIONS
 
-### Phase A0 — Commit and push artifacts
+See `references/artifact-commit-flow.md`.
 
-When `{artifacts_to_commit}` is non-empty (approved in Step 4):
+### Phase A0 — Commit and push (tracked paths only)
+
+When `{artifacts_to_commit}` is non-empty:
 
 ```bash
-git add <artifact files>
-git commit -m "<rendered artifact_commit_message_template>"   # includes {ticket_key} — e.g. "docs: add BMad artifacts for PR #42 [NCC-1234]"
+git add <tracked_repo_path>   # from git ls-files — NOT _bmad_output/
+git commit -m "docs: add BMad artifacts [{ticket_key}]"
 git push
 ```
 
-Verify the push succeeded (`git status` clean, branch up to date with remote). If it fails, **stop** — do not publish a body whose artifact links would 404. After pushing, spot-check one link target exists:
+Never `git add` the symlink folder. Record `{artifact_commit_sha}`.
+
+### Phase A0b — Verify links (spot-check)
 
 ```bash
-gh api repos/{owner}/{repo}/contents/<repo_path>?ref={head_branch} --jq .name
+gh api repos/{owner}/{repo}/contents/<repo_path>?ref={head_branch} --jq .html_url
 ```
 
-If git refuses a file (ignored path), downgrade that row per `{workflow.uncommitted_artifacts}`, adjust the body, and tell the user.
+Patch the approved body's `bmad_artifacts` links if needed → `{body_to_publish}`.
 
-### Phase A — Publish
+### Phase A — Create or update PR
 
 **Existing PR:**
 
 ```bash
-gh pr edit {pr_number} --body-file <tempfile with approved body>
-gh pr edit {pr_number} --title "{pr_title}"        # when the title changed (approved in Step 4)
+gh pr edit {pr_number} --body-file <{body_to_publish}>
+gh pr edit {pr_number} --title "{pr_title}"   # when title changed
 ```
 
-Use `--body-file` (not `--body`) so markdown, markers, and quoting survive intact.
-
-**New PR (`{create_pr}: true`):**
+**New PR (`{create_pr}: true`)** — only after A0 when artifacts were pending:
 
 ```bash
-gh pr create --draft --base {base_branch} --title "{pr_title}" --body-file <tempfile>
+gh pr create --draft --base {base_branch} --title "{pr_title}" --body-file <{body_to_publish}>
 ```
 
-`{pr_title}` is the Step 4-approved title — it always contains `{ticket_key}`. Set `{pr_number}` and `{pr_url}` from the output and rename `{report_path}` to use the real PR number.
+Set `{pr_number}`, `{pr_url}` from output; rename `{report_path}` to use the PR number.
 
 ### Phase B — Verify
 
@@ -55,44 +57,19 @@ gh pr create --draft --base {base_branch} --title "{pr_title}" --body-file <temp
 gh pr view {pr_number} --json body
 ```
 
-Confirm the published body matches the approved draft (markers present, preserved content intact). On mismatch, report and retry once before asking the user.
+Confirm body matches `{body_to_publish}` and artifact links resolve.
 
-### Phase C — Write the report
+### Phase C — Report
 
-Create or update `{report_path}` (make the `pr-reviews/` directory if needed):
+Write `{report_path}` with mode (`refresh` | `created_pr`), `{artifact_commit_sha}`, artifact paths, and published body verbatim.
 
-```markdown
-# PR Describe — PR #{pr_number}
+### Phase D — Summary
 
-- PR: {pr_url}
-- Title: {pr_title}
-- Ticket: {ticket_key}
-- Run: {date}
-- Mode: first_run | refresh | created_pr
-- Story: {story_file or "none"}
-- Evidence source: test_command | gh pr checks | pending
-- Secrets scan: clean | confirmed false positives: <list> | skipped
-- Status: applied
+> **PR description applied** — #{pr_number} ({pr_url})
+> Artifacts: {n} linked ({artifact_commit_sha or "already on branch"})
 
-## Published body
-
-<the approved body, verbatim>
-```
-
-### Phase D — Completion summary
-
-> **PR description applied**
->
-> - PR: #{pr_number} ({pr_url})
-> - Sections: {list rendered}
-> - ACs mapped: {n}/{total} (story: {story_file or "none"})
-> - Evidence: {source}
-> - Artifacts: {n} linked ({m} committed in {sha}), {k} fallback
-
-Offer next steps: mark the PR ready for review (`gh pr ready`), request reviewers, or run `bmad-copilot-review-closure` once Copilot has reviewed.
+Offer: `gh pr ready`, request reviewers, or run `bmad-pr-review-closure`.
 
 ### On Complete
 
-Run: `python3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow.on_complete`
-
-If the resolved `workflow.on_complete` is non-empty, follow it as the final terminal instruction before exiting.
+If `{project-root}/_bmad/scripts/resolve_customization.py` exists, run it for `workflow.on_complete`. In standalone mode, read `on_complete` from `customize.toml`. Follow if non-empty.

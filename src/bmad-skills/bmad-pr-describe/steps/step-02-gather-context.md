@@ -7,24 +7,31 @@
 
 - YOU MUST ALWAYS SPEAK OUTPUT in `{communication_language}`
 - Every claim in the description must trace back to something gathered here
-- Large diffs: read changed hunks, not whole files — subagents may parallel-read when many files changed
+- Large diffs: read **changed hunks only**, not whole files — see `{workflow.diff_file_threshold}` below
+- Follow `{skill-root}/../_shared/token-budget.md` — ingest once, distill in Step 2b, draft from digest in Step 3
 
 ## INSTRUCTIONS
 
 1. **Diff and commits:**
 
    ```bash
-   gh pr diff {pr_number}            # or: git diff {base_branch}...HEAD when creating
+   gh pr diff {pr_number} --stat    # always — file list and churn
+   gh pr diff {pr_number}            # hunks only; or: git diff {base_branch}...HEAD when creating
    gh pr view {pr_number} --json commits
    git log {base_branch}..HEAD --oneline
    ```
+
+   **Diff read mode** (`{workflow.diff_read_mode}`):
+   - When changed file count ≤ `{workflow.diff_file_threshold}`: read hunks for each file.
+   - When above threshold: use `--stat` + hunks for **risk-touched** files (migrations, auth, public API) and one-liner from diff headers for the rest — do not load every full file.
+   - Subagents may parallel-read hunks when many files changed; merge into one `{change_summary}`.
 
    Build `{change_summary}`: changed files with per-file one-liners (what changed and why it matters), grouped by area (src, tests, config, docs). Note adds/deletes/renames and any migration or breaking change.
 
 2. **Story context (BMad integration):**
 
-   - Search `{implementation_artifacts}` for the story file matching this branch/PR — match on branch name, story ID in branch or commits, or most recent `in progress` story in sprint status.
-   - If found, set `{story_file}` and extract: story title, acceptance criteria (with IDs), tasks, and any dev notes.
+   - Search `_bmad_output/` for the story file matching this branch/PR — match on branch name, story ID in branch or commits, or most recent `in progress` story in sprint status.
+   - If found, set `{story_file}` and extract **AC table only** (ID + criterion text, max `{workflow.story_ac_max_chars}` per row) plus task IDs — not the full story narrative or dev notes unless ≤ `{workflow.story_dev_notes_max_chars}` chars total.
    - If none found, note it — the AC mapping section will be omitted and `{story_file}` left empty. Do not guess ACs.
 
 3. **Ticket linkage (required):**
@@ -63,28 +70,29 @@
      ```
 
      Use only **conclusive** check results (pass/fail) as gates. **Never snapshot pending CI as evidence** — pending states go stale the moment CI finishes; the rendered section links to the PR's Checks tab instead.
-   - Capture `{evidence_raw}`: a short tail (≤ ~30 lines) of the actual runner output — per-suite count lines and the final BUILD/summary line — with the run date. This becomes the collapsible proof block; never fabricate it.
+   - Capture `{evidence_raw}`: truncate to `{workflow.evidence_raw_max_lines}` lines — per-suite count lines and final BUILD/summary only.
 
 9. **Screenshots / artifacts:**
 
    - If the change is UI-facing, ask the user for screenshot paths or URLs to embed (one short question). Otherwise plan to omit the screenshots section.
 
-10. **BMad artifacts (commit-and-link):**
+10. **BMad artifacts** — see `references/artifact-commit-flow.md`:
 
-   - Collect candidate files: `{story_file}` (always, when found) plus every match of `{workflow.artifact_sources}` resolved under `{implementation_artifacts}` (substitute `{pr_number}` and `{story_id}` in the globs; skip patterns that match nothing).
-   - Resolve each path **through symlinks to its in-repo location** (`git ls-files` / the symlink target inside the repo) — the artifacts folder is typically reachable via a tracked symlink, and links must use the path git actually tracks.
-   - When `{workflow.commit_artifacts}` is true, classify each artifact:
-     - **Already committed and unchanged** → nothing to do; link directly.
-     - **New or modified** → add to `{artifacts_to_commit}` (dry-check with `git add --dry-run`; do **not** commit or push yet — that happens in Step 5 after the user approves).
-     - **Untrackable** (gitignored, outside the repo) → fall back per `{workflow.uncommitted_artifacts}` (`embed` truncated to `{workflow.embed_max_chars}`, `mention`, or `skip`) and tell the user which file and why.
-   - Build `{bmad_artifacts}`: `name`, `repo_path`, `attach_as: link | embed | mention`, `pending_commit: true/false`. Link URLs are deterministic before the push: `https://github.com/{owner}/{repo}/blob/{head_branch}/<repo_path>` per file, plus one **tree URL** to the artifacts directory itself as the "all BMad output for this PR" reference.
+    `_bmad_output/` is the **symlink** (BMad reads here only). Git tracks files in a different folder.
+
+    1. Collect artifacts under `_bmad_output/` (`{story_file}` + `{workflow.artifact_sources}` globs).
+    2. Resolve each to its git-tracked path: `realpath` → `git ls-files --full-name --error-unmatch`.
+    3. New/changed → `{artifacts_to_commit}` (tracked paths only, never `_bmad_output/`).
+    4. PR body links use `blob/{head_branch}/<tracked_repo_path>`.
+
+    When `{create_pr}: true`: commit → push → link → then create the PR.
 
 11. **Existing hand-written content:**
 
     - Split `{existing_body}` on the markers: `{preserved_before}` (above `body_marker_begin`) and `{preserved_after}` (below `body_marker_end`). Both are reproduced verbatim in Step 5.
 
-12. **Report what was gathered** (counts, ticket key, template found or not, secrets scan result, risk signals, story found or not, evidence source, artifacts found and how each attaches). If the diff is empty, **HALT** — there is nothing to describe.
+12. **Report what was gathered** — file count, AC count, test gates, artifact paths. If the diff is empty, **HALT**.
 
 ## NEXT
 
-Read fully and follow: `./step-03-draft-description.md`
+Read fully and follow: `./step-02b-compact-digest.md`

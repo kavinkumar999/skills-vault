@@ -1,46 +1,22 @@
 # GitHub Commands for PR Describe
 
-All operations via `gh` CLI.
+All operations via `gh` CLI. Shared mechanics — auth, PR resolution, diff/commits/CI, and
+the `gh pr edit --body-file` contract — live in `../_shared/github-commands.md`. This file
+covers only what PR Describe adds on top.
 
-## Prerequisites
-
-```bash
-gh auth status
-```
-
-## Resolve the PR for the current branch
+## Resolve the PR (extra fields PR Describe needs)
 
 ```bash
 gh pr view --json number,url,title,body,baseRefName,headRefName,isDraft,baseRepository,headRepositoryOwner
 ```
 
-Exit code non-zero with "no pull requests found" → branch has no PR (see `create_if_missing`).
-
-## Read the diff and commits
-
-```bash
-gh pr diff {pr_number}                       # full diff of the PR
-git diff {base_branch}...HEAD                # when no PR exists yet
-gh pr view {pr_number} --json commits
-git log {base_branch}..HEAD --oneline
-git diff {base_branch}...HEAD --stat         # quick file/areas overview
-```
+`baseRepository` / `headRepositoryOwner` are needed for cross-fork blob links in the body.
+Non-zero exit + "no pull requests found" → branch has no PR (see `create_if_missing`).
 
 ## Test evidence
 
-```bash
-gh pr checks {pr_number}                     # CI check results (latest run)
-```
-
-Prefer `{workflow.test_command}` output when configured; `gh pr checks` is the fallback. Never report evidence you did not see.
-
-## Apply the description
-
-```bash
-gh pr edit {pr_number} --body-file /tmp/pr-body.md
-```
-
-Always `--body-file` — inline `--body` mangles quoting and multi-line markdown.
+Prefer `{workflow.test_command}` output when configured; `gh pr checks {pr_number}` is the
+fallback (shared file). Never report evidence you did not see.
 
 ## Create a draft PR (when none exists)
 

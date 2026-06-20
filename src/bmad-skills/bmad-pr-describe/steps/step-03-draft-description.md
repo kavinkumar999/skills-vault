@@ -7,8 +7,9 @@
 
 - YOU MUST ALWAYS SPEAK OUTPUT in `{communication_language}` — but compose the **PR body** in `{workflow.reply_language}`
 - Render only the sections listed in `{workflow.sections}`, in that order
+- **Drive from `{change_digest}` and `{digest_path}`** — do not re-read the raw diff or full story file; cite files from the digest's per-file one-liners
 - Reviewer time is the budget: lead with what matters, keep prose tight, prefer tables for mappings
-- No claim without a source from Step 2 — diff, story, test output, or CI checks
+- No claim without a source from the digest / Step 2 gates — test output, or CI checks
 
 ## INSTRUCTIONS
 
@@ -28,13 +29,13 @@ When there is no repo template, render `{workflow.sections}` as below.
 
 Draft `{generated_block}` — the content that will live between the body markers:
 
-1. **summary** — 2–4 sentences: what this PR does and why, readable without opening the diff. Link `{ticket_key}`.
+1. **summary** — 2–4 sentences from `{change_digest}` one-line summary + context. Link `{ticket_key}`.
 
-2. **changes** — grouped bullet list from `{change_summary}`. One bullet per meaningful change, with file references (`path` or `path:line`). Call out breaking changes, migrations, and config changes prominently at the top of the section.
+2. **changes** — grouped bullet list from `{change_digest}` per-file one-liners (not a second pass over the diff). Call out breaking changes, migrations, and config changes at the top.
 
-3. **why** — the motivation: story goal, bug being fixed, or constraint driving the approach. One short paragraph; skip if the summary already covers it fully.
+3. **why** — motivation from digest drafting notes or story AC; one short paragraph; skip if summary covers it.
 
-4. **diagram** — only when `{diagram_worthy}` is true. A small Mermaid diagram (GitHub renders it natively) showing the flow this PR introduces or changes — `sequenceDiagram` for call/event flows, `flowchart` for structure. Participants come from Step 2's detection; keep it to the changed flow only (≤ ~10 nodes), not the whole system. Never render a diagram for a localized change — a forced diagram is worse than none.
+4. **diagram** — only when `{diagram_worthy}` from digest. Mermaid diagram (≤ ~10 nodes) for cross-component flow changes only.
 
    ````markdown
    ```mermaid
@@ -46,7 +47,7 @@ Draft `{generated_block}` — the content that will live between the body marker
    ```
    ````
 
-5. **ac_mapping** — only when `{story_file}` exists:
+5. **ac_mapping** — only when `{story_file}` exists; AC rows from digest only:
 
    | AC | Status | Where |
    | --- | --- | --- |
@@ -95,16 +96,14 @@ Draft `{generated_block}` — the content that will live between the body marker
    ```markdown
    ### BMad artifacts
 
-   All BMad output for this PR: [`_bmad_output/`](https://github.com/{owner}/{repo}/tree/{head_branch}/<artifacts_repo_path>)
+   All BMad output for this PR: [`{artifacts_tree_repo_path}/`](https://github.com/{owner}/{repo}/tree/{head_branch}/{artifacts_tree_repo_path})
 
-   | Artifact | Link |
-   | --- | --- |
-   | Story | [user-auth-flow.md](https://github.com/{owner}/{repo}/blob/{head_branch}/<repo_path>) |
-   | Copilot closure report | [pr-42-copilot-closure.md](…/blob/{head_branch}/<repo_path>) |
-   | Sprint status (this story) | [sprint-status.md](…/blob/{head_branch}/<repo_path>) |
+   | Artifact | Tracked path | Link |
+   | --- | --- | --- |
+   | Story | `<tracked_repo_path>` | [filename](https://github.com/{owner}/{repo}/blob/{head_branch}/<tracked_repo_path>) |
    ```
 
-   Links use the in-repo path resolved in Step 2 — they go live when Step 5 pushes `{artifacts_to_commit}`. Render fallback artifacts (`embed` → one `<details>` block each, truncated; `mention` → path with "(not committed)") after the table. Omit the section entirely when `{bmad_artifacts}` is empty.
+   Use tracked paths from `git ls-files` — never `_bmad_output/` in links. Include `{digest_path}` as a linked artifact when tracked. Links go live after Step 5 push. Omit section when `{bmad_artifacts}` is empty.
 
 10. **checklist** — render `{workflow.checklist_items}` as `- [x]` / `- [ ]` based on what Step 2 actually verified. The secrets item may be pre-checked **only** when the Step 2 scan ran clean. Never pre-check an item you did not verify.
 

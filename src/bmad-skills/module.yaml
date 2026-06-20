@@ -1,4 +1,4 @@
 code: custom-pr-skills
 name: "Custom PR Skills"
-description: "Custom PR review skills: Copilot review closure and human reviewer response"
+description: "Custom PR lifecycle skills: Jira solution spec, PR describe, adversarial code review, and unified review closure (Copilot + human)"
 default_selected: true

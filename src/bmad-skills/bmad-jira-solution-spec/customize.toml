@@ -1,0 +1,138 @@
+# DO NOT EDIT -- overwritten on every update.
+#
+# Workflow customization surface for bmad-jira-solution-spec.
+
+[workflow]
+
+activation_steps_prepend = []
+activation_steps_append = []
+
+persistent_facts = [
+  "file:{project-root}/**/project-context.md",
+  "The solution spec is grounded in Jira ticket content, ingested attachments, extracted commands, AND verified codebase findings — never invent paths, APIs, or behaviors.",
+  "Produce a compact analysis (one screen) from Jira + attachments + commands before codebase investigation; Step 4 executes the investigation plan from that compact report.",
+  "Distinguish ticket claims from code reality. Every implementation task must cite a file or symbol you actually read or searched.",
+  "BMad artifacts live under _bmad_output/ — a symlink only. Git tracks the real files elsewhere. Commit tracked paths when the user wants the spec on the branch. Never git add _bmad_output/.",
+]
+
+# Language for the solution spec artifact. Chat uses communication_language.
+document_language = "en"
+
+# Jira ticket key pattern — matches any project key by default (NCC-1234, PLAT-42, ...).
+ticket_pattern = '[A-Z][A-Z0-9]+-\d+'
+
+# When the user does not provide a ticket key, offer to list their assigned issues.
+# Requires Atlassian MCP. Values: "ask" | "never"
+list_assigned_when_missing = "ask"
+
+# Jira fields to fetch via getJiraIssue (append in team override if your instance has custom fields).
+jira_fields = [
+  "summary",
+  "description",
+  "status",
+  "issuetype",
+  "priority",
+  "assignee",
+  "reporter",
+  "labels",
+  "components",
+  "fixVersions",
+  "parent",
+  "subtasks",
+  "issuelinks",
+  "comment",
+  "attachment",
+  "customfield_10016",
+]
+
+# Max comments to include in context (newest first). 0 = none.
+jira_comment_limit = 10
+
+# Attachment ingest limits.
+attachment_max_count = 10
+attachment_max_bytes = 1048576
+# When true, HALT if ticket lists attachments but none could be downloaded.
+require_attachments = false
+
+# Diagnostic/repro command execution during compact analysis (Step 3).
+# "never" | "safe_only" | "ask"
+run_diagnostic_commands = "ask"
+command_output_max_lines = 40
+
+# How the full solution spec references the compact analysis.
+# "full" = embed verbatim; "link" = link + 3-line summary only
+embed_compact_analysis = "link"
+
+# Sections to generate in the solution spec, in order.
+# Available: compact_analysis, ticket_summary, attachments_and_commands,
+# problem_statement, acceptance_criteria, code_validation, root_cause,
+# proposed_solution, implementation_plan, risks, test_plan, open_questions,
+# agent_handoff.
+sections = [
+  "compact_analysis",
+  "ticket_summary",
+  "attachments_and_commands",
+  "problem_statement",
+  "acceptance_criteria",
+  "code_validation",
+  "root_cause",
+  "proposed_solution",
+  "implementation_plan",
+  "risks",
+  "test_plan",
+  "open_questions",
+  "agent_handoff",
+]
+
+# Agent routing table. First matching route wins (issue_type or label regex).
+# code = menu/skill identifier shown to the developer; match_* are case-insensitive regexes.
+[[workflow.agent_routes]]
+code = "bmad-dev-story"
+label = "Feature / story implementation"
+match_issue_types = ["Story", "Task", "Improvement", "New Feature"]
+match_labels = []
+prompt_hint = "Implement the solution spec tasks against the story acceptance criteria."
+
+[[workflow.agent_routes]]
+code = "bmad-dev-story"
+label = "Bug fix implementation"
+match_issue_types = ["Bug", "Defect"]
+match_labels = []
+prompt_hint = "Fix the bug described in the solution spec. Start with the root-cause section and cited files."
+
+[[workflow.agent_routes]]
+code = "investigate-service-incident"
+label = "Production / incident investigation"
+match_issue_types = ["Incident", "Problem"]
+match_labels = ["incident", "production", "sev-?", "outage"]
+prompt_hint = "Use the incident investigation workflow. The solution spec is a starting hypothesis — validate with runtime evidence."
+
+[[workflow.agent_routes]]
+code = "bmad-dev-story"
+label = "Technical debt / refactor"
+match_issue_types = ["Technical Debt", "Refactor"]
+match_labels = ["tech-debt", "refactor"]
+prompt_hint = "Refactor per the implementation plan. Preserve existing behavior unless the ticket says otherwise."
+
+[[workflow.agent_routes]]
+code = "general-implement"
+label = "General implementation (default)"
+match_issue_types = []
+match_labels = []
+prompt_hint = "Implement the solution spec. Work through implementation_plan tasks in order."
+
+# Fallback when no route matches.
+default_agent = "bmad-dev-story"
+default_agent_label = "Development story workflow"
+default_prompt_hint = "Implement the approved solution spec starting with the highest-priority tasks."
+
+# Commit the spec to git after approval. "ask" | "never" | "always"
+commit_spec = "ask"
+
+# Commit message template. {ticket_key} is replaced.
+spec_commit_message_template = "docs: add solution spec for [{ticket_key}]"
+
+# Artifact directory under _bmad_output/ (symlink).
+artifact_subdir = "ticket-analysis"
+
+on_complete = ""

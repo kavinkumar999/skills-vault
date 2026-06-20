@@ -20,7 +20,7 @@ skills-vault/
 
 | Folder | Targets | What's inside |
 | --- | --- | --- |
-| [`src/bmad-skills/`](src/bmad-skills/) | BMad Method, Claude Code | PR lifecycle: describe → Copilot closure → reviewer response |
+| [`src/bmad-skills/`](src/bmad-skills/) | BMad Method, Claude Code | PR lifecycle: describe → review closure (Copilot + human) |
 
 Each family README covers what its skills do, how to configure them, and any
 tool-specific install steps.
@@ -70,3 +70,13 @@ required — the skill file is the contract.
 Local paths and git clones both work as sources. Edits in this repo take effect
 on the next install, symlink refresh, or agent restart depending on how you
 wired the skills in.
+
+## Validation
+
+Smoke-check frontmatter, step links, TOML, and `module-help.csv` alignment:
+
+```bash
+python3 scripts/validate-skills.py
+```
+
+CI runs the same script on push and pull requests.

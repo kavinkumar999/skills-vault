@@ -1,0 +1,39 @@
+# DO NOT EDIT -- overwritten on every update.
+#
+# Workflow customization surface for bmad-adversarial-code-review.
+
+[workflow]
+
+activation_steps_prepend = []
+activation_steps_append = []
+
+persistent_facts = [
+  "file:{project-root}/**/project-context.md",
+  "Adversarial mandate: You have to do the adversarial code review.",
+  "Report only Critical and High merge blockers — issues you would refuse to merge without a fix or explicit risk acceptance.",
+  "Read-only skill: no code changes, commits, pushes, or PR comments.",
+  "Ingest diff once in Step 2; distill to pr-{n}-digest.md in Step 2b; adversarial review in Step 3 uses digest + targeted file reads — see _shared/token-budget.md.",
+  "Stable blocker IDs (BLK-001, BLK-002, …) carry across review rounds; mark resolved when the issue is fixed, regressed when it reappears.",
+  "Each invocation increments the review round (v1, v2, v3…) and appends to the ledger at pr-{n}-adversarial-review.md.",
+]
+
+# Severities emitted by this skill. Medium/Low are suppressed unless the user widens scope in chat.
+allowed_severities = ["critical", "high"]
+
+# When multiple open PRs exist for the branch, "first" = lowest PR number (gh pr list order).
+pr_selection = "first_open"
+
+# Reuse an existing pr-{n}-digest.md when younger than this many hours and same PR head SHA.
+digest_reuse_max_hours = 4
+
+reply_language = "en"
+ticket_pattern = '[A-Z][A-Z0-9]+-\d+'
+
+# --- Token budget (see _shared/token-budget.md) ---
+diff_read_mode = "hunks_only"
+diff_file_threshold = 25
+digest_max_file_lines = 40
+digest_summary_max_chars = 280
+blocker_evidence_max_chars = 400
+
+on_complete = ""

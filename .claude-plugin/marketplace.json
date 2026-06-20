@@ -8,15 +8,16 @@
     {
       "name": "bmad-skills",
       "source": "./src/bmad-skills",
-      "description": "PR lifecycle skills for the BMad Method: PR describe, Copilot review closure, and human reviewer response.",
-      "version": "1.0.0",
+      "description": "PR lifecycle skills for the BMad Method: Jira solution spec, PR describe, adversarial code review, and unified review closure (Copilot + human).",
+      "version": "2.0.0",
       "author": {
         "name": "Kavin Kumar"
       },
       "skills": [
+        "./src/bmad-skills/bmad-jira-solution-spec",
         "./src/bmad-skills/bmad-pr-describe",
-        "./src/bmad-skills/bmad-copilot-review-closure",
-        "./src/bmad-skills/bmad-pr-reviewer-response"
+        "./src/bmad-skills/bmad-adversarial-code-review",
+        "./src/bmad-skills/bmad-pr-review-closure"
       ]
     }
   ]

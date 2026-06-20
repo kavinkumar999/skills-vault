@@ -24,8 +24,8 @@ Render the full assembled body (markers included) in a fenced block so the user 
 
 - **Refresh:** summarize the diff against the current generated block — sections added/removed/rewritten — and confirm the preserved hand-written parts are untouched.
 - **First run on a non-empty body:** show what happens to the existing content (preserved above/below the markers, or replaced if the user confirmed that in Step 1).
-- **New PR:** state title, base branch, and that it will be created as a **draft**.
-- **Artifacts commit:** when `{artifacts_to_commit}` is non-empty, list the files that will be committed and pushed to the PR branch (with the rendered `{workflow.artifact_commit_message_template}`) so their links go live. Approving the draft approves this push too — say so explicitly.
+- **New PR:** commit + push tracked artifact files → link in body → `gh pr create --draft`
+- **Artifacts:** when `{artifacts_to_commit}` is non-empty, list the **git-tracked paths** (not the symlink). Approving the draft approves commit + push + PR publish together.
 
 ### 3. Flag honesty gaps
 
