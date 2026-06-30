@@ -85,12 +85,12 @@ has none), and `apply_mode`. It also: generates the PR **title** via `title_temp
 `secrets_patterns`); and conditionally renders a **Risk & rollback** section
 (migrations/config/flags detected) and a **Mermaid diagram** for cross-component
 flow changes. The `bmad_artifacts` section attaches the story file,
-review reports, and sprint-status entry to the PR via **commit-and-link**
-(`commit_artifacts = true`): new/changed artifacts are committed and pushed to the
-PR branch (message via `artifact_commit_message_template`, push approved together
-with the draft), then linked by branch URL — one tree link to the whole artifacts
-folder plus per-file blob links. Requires the artifacts path (e.g. a `_bmad_output`
-symlink target) to be tracked in git; untrackable files fall back per
+review reports, and sprint-status entry via **commit-and-link**
+(`commit_artifacts = true`): new/changed artifacts are committed and pushed in the
+**BMad output repository** (the git repo behind the `{implementation_artifacts}`
+symlink — the common setup), then linked by that repo's **origin URL** (tree link
+to the output folder plus per-file blob links). When artifacts live inside the PR
+repo instead, commits go to the PR branch. Untrackable files fall back per
 `uncommitted_artifacts` (`mention` default, or `embed`/`skip`). Sources are the
 `artifact_sources` globs.
 

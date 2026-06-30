@@ -67,7 +67,7 @@ Step-file architecture — same discipline as `bmad-copilot-review-closure`:
 - **Micro-file design:** One step file at a time
 - **Sequential enforcement:** No skipping steps
 - **Human gates:** Halt at draft presentation and before applying the body (or creating a PR)
-- **State:** Track `{pr_number}`, `{owner}`, `{repo}`, `{base_branch}`, `{story_file}`, and the draft body
+- **State:** Track `{pr_number}`, `{owner}`, `{repo}`, `{base_branch}`, `{story_file}`, `{artifacts_external_repo}`, `{artifacts_commit_target}`, `{artifacts_owner}`, `{artifacts_repo}`, `{artifacts_branch}`, `{artifacts_remote_url}`, and the draft body
 - **Report artifact:** Persist the applied body and run status to `{report_path}` (`{implementation_artifacts}/pr-reviews/pr-{pr_number}-describe.md`) for audit and resume
 
 ### Step Processing Rules

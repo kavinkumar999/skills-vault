@@ -12,6 +12,7 @@ persistent_facts = [
   "The PR description is generated from the diff, commits, and story file — never invent claims the diff does not support.",
   "Generated content lives between body_marker_begin and body_marker_end. Content outside the markers is hand-written and must be preserved verbatim on refresh.",
   "When a story file exists, every acceptance criterion gets a row in the AC mapping table: implemented (with file refs), partial, or not-in-this-PR.",
+  "{implementation_artifacts} is typically a symlink to a separate BMad output git repository. Commit artifacts there, push, and link using that repo's origin URL — do not copy artifacts into the PR branch.",
 ]
 
 # Language for the PR body posted to GitHub. Chat uses communication_language; the PR body does not.
@@ -74,17 +75,22 @@ artifact_sources = [
   "sprint-status*",
 ]
 
-# Commit-and-link flow: stage the matched artifacts, commit, push to the PR
-# branch, then attach branch URLs in the PR body. Requires the artifact path to
-# be trackable in git (e.g. a committed _bmad_output folder/symlink target).
+# Commit-and-link flow: stage matched artifacts, commit, and push — then attach
+# live URLs in the PR body. The commit target is resolved in Step 2:
+#   1. When {implementation_artifacts} is a symlink to a separate git repo (the
+#      common BMad setup), commit and push there and link via that repo's origin.
+#   2. Otherwise commit on the PR branch when paths are trackable in the PR repo.
 # The commit+push happens in Step 5, after the user approves the draft.
 commit_artifacts = true
 
 # Commit message for the artifacts commit. {ticket_key} and {pr_number} are replaced.
 artifact_commit_message_template = "docs: add BMad artifacts for PR #{pr_number} [{ticket_key}]"
 
-# Fallback for artifacts git refuses to track (gitignored path, outside the
-# repo): "embed" (collapsible <details> block), "mention" (path only), "skip".
+# Fallback when an artifact cannot be committed in either the symlinked output repo
+# or the PR repo (gitignored, no remote, push failed):
+#   "embed"   — inline the contents in a collapsible <details> block.
+#   "mention" — path only, no link.
+#   "skip"    — leave it out entirely.
 uncommitted_artifacts = "mention"
 
 # Max characters per artifact when the embed fallback is used (GitHub caps PR

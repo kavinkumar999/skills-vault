@@ -90,21 +90,23 @@ Draft `{generated_block}` — the content that will live between the body marker
    - **Config: `SESSION_TTL` added** — missing value falls back to 3600s; no deploy-order constraint.
    ```
 
-9. **bmad_artifacts** — lead with the directory tree link (the "all BMad output" reference), then one row per artifact:
+9. **bmad_artifacts** — lead with the directory tree link (origin URL of the BMad output repo), then one row per artifact:
 
    ```markdown
    ### BMad artifacts
 
-   All BMad output for this PR: [`_bmad_output/`](https://github.com/{owner}/{repo}/tree/{head_branch}/<artifacts_repo_path>)
+   All BMad output for this PR: [`<artifacts_folder>/`](https://github.com/{artifacts_owner}/{artifacts_repo}/tree/{artifacts_branch}/<tree_path>)
 
    | Artifact | Link |
    | --- | --- |
-   | Story | [user-auth-flow.md](https://github.com/{owner}/{repo}/blob/{head_branch}/<repo_path>) |
-   | Copilot closure report | [pr-42-copilot-closure.md](…/blob/{head_branch}/<repo_path>) |
-   | Sprint status (this story) | [sprint-status.md](…/blob/{head_branch}/<repo_path>) |
+   | Story | [user-auth-flow.md](https://github.com/{artifacts_owner}/{artifacts_repo}/blob/{artifacts_branch}/<repo_path>) |
+   | Copilot closure report | [pr-42-copilot-closure.md](…/blob/{artifacts_branch}/<repo_path>) |
+   | Sprint status (this story) | [sprint-status.md](…/blob/{artifacts_branch}/<repo_path>) |
    ```
 
-   Links use the in-repo path resolved in Step 2 — they go live when Step 5 pushes `{artifacts_to_commit}`. Render fallback artifacts (`embed` → one `<details>` block each, truncated; `mention` → path with "(not committed)") after the table. Omit the section entirely when `{bmad_artifacts}` is empty.
+   When `{artifacts_external_repo}` is false (artifacts live in the PR repo), substitute `{owner}/{repo}` and `{head_branch}` for the link host and ref.
+
+   Links use paths relative to `{artifacts_commit_target}` — they go live when Step 5 pushes `{artifacts_to_commit}` to that repo's remote. Render fallback artifacts (`embed` → one `<details>` block each, truncated; `mention` → path with "(not committed)") after the table. Omit the section entirely when `{bmad_artifacts}` is empty.
 
 10. **checklist** — render `{workflow.checklist_items}` as `- [x]` / `- [ ]` based on what Step 2 actually verified. The secrets item may be pre-checked **only** when the Step 2 scan ran clean. Never pre-check an item you did not verify.
 

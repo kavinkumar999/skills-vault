@@ -70,6 +70,24 @@ The generated block always sits between the markers:
 - Content above/below the markers is hand-written — reproduce verbatim.
 - Markers are invisible on GitHub; do not remove them.
 
+## BMad artifacts — commit in the output repo
+
+When `{implementation_artifacts}` is a symlink to a separate git repository:
+
+```bash
+# Resolve the output repo root (follow symlink)
+readlink -f "{implementation_artifacts}"    # or realpath on macOS/Linux
+
+git -C "<artifacts_repo_root>" remote get-url origin
+git -C "<artifacts_repo_root>" branch --show-current
+git -C "<artifacts_repo_root>" status
+git -C "<artifacts_repo_root>" add <artifact paths...>
+git -C "<artifacts_repo_root>" commit -m "docs: add BMad artifacts for PR #42 [NCC-1234]"
+git -C "<artifacts_repo_root>" push
+```
+
+PR body links use the **output repo's** origin (`{artifacts_owner}/{artifacts_repo}`) and `{artifacts_branch}`, not the PR repo.
+
 ## Optional follow-ups
 
 ```bash

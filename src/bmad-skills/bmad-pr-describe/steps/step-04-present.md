@@ -25,7 +25,7 @@ Render the full assembled body (markers included) in a fenced block so the user 
 - **Refresh:** summarize the diff against the current generated block — sections added/removed/rewritten — and confirm the preserved hand-written parts are untouched.
 - **First run on a non-empty body:** show what happens to the existing content (preserved above/below the markers, or replaced if the user confirmed that in Step 1).
 - **New PR:** state title, base branch, and that it will be created as a **draft**.
-- **Artifacts commit:** when `{artifacts_to_commit}` is non-empty, list the files that will be committed and pushed to the PR branch (with the rendered `{workflow.artifact_commit_message_template}`) so their links go live. Approving the draft approves this push too — say so explicitly.
+- **Artifacts commit:** when `{artifacts_to_commit}` is non-empty, list the files that will be committed and pushed to **`{artifacts_commit_target}`** (the BMad output repo when `{artifacts_external_repo}` is true, otherwise the PR branch) with the rendered `{workflow.artifact_commit_message_template}` so their origin links go live. State the target remote (`{artifacts_remote_url}` or the PR repo origin). Approving the draft approves this commit+push too — say so explicitly.
 
 ### 3. Flag honesty gaps
 
