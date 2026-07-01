@@ -1,0 +1,93 @@
+# DO NOT EDIT -- overwritten on every update.
+#
+# Workflow customization surface for bmad-jira-ticket-solution.
+
+[workflow]
+
+activation_steps_prepend = []
+activation_steps_append = []
+
+persistent_facts = [
+  "file:{project-root}/**/project-context.md",
+  "The solution plan is grounded in the actual code — every root-cause claim cites file:line evidence gathered during analysis. Hypotheses that were not verified are labeled as assumptions, never stated as fact.",
+  "This skill is read-only: it produces a plan and never edits product code, commits a fix, or opens a PR. Implementation is handed off to a dev skill.",
+  "Verified facts and assumptions/open-questions are kept visibly separate in the plan so a reviewer can tell which is which.",
+]
+
+# Language for the written plan. Chat uses communication_language; the plan does not.
+reply_language = "en"
+
+# Jira ticket key pattern — matches any project key by default (NCC-1234,
+# PLAT-42, ...). Narrow it per project (e.g. 'NCC-\d+') in the team override.
+# The key is extracted from the user's prompt or asked for once; it is REQUIRED.
+ticket_pattern = '[A-Z][A-Z0-9]+-\d+'
+
+# How the ticket is fetched:
+#   "mcp"    — Atlassian MCP (getJiraIssue / searchJiraIssuesUsingJql). Preferred.
+#   "manual" — ask the user to paste the ticket body when no MCP/CLI is available.
+# "mcp" falls back to "manual" automatically if the Atlassian tools are unreachable.
+jira_fetch = "mcp"
+
+# Pull the ticket's comments too (often hold the real root-cause discussion and
+# prior attempts). Comments are summarized in the plan and cross-checked against code.
+include_comments = true
+
+# Codebase analysis breadth:
+#   "quick"    — single focused trace of the obvious component(s).
+#   "standard" — trace the implicated paths + their callers/callees and tests.
+#   "deep"     — standard + adjacent subsystems and historical git context.
+analysis_depth = "standard"
+
+# Use parallel read-only sub-agents (Explore / code-explorer) to trace the code
+# when the ticket spans multiple files/modules. false = trace inline only.
+use_subagents = true
+
+# Sections of the solution plan, in order. Remove entries to slim it.
+# Available: problem, root_cause, evidence, approach, alternatives,
+# acceptance_criteria, implementation_steps, test_plan, risk_rollback,
+# ticket_corrections, open_questions, out_of_scope.
+plan_sections = [
+  "problem",
+  "root_cause",
+  "evidence",
+  "approach",
+  "alternatives",
+  "acceptance_criteria",
+  "implementation_steps",
+  "test_plan",
+  "risk_rollback",
+  "ticket_corrections",
+  "open_questions",
+  "out_of_scope",
+]
+
+# Where the plan is written. Resolves under {planning_artifacts} unless prefixed
+# with {project-root}. {planning_artifacts} is commonly a symlink to a separate
+# BMad output git repo — the plan is committed there and linked via its origin
+# (same resolution as bmad-pr-describe).
+plan_output_subdir = ""
+
+# Plan filename. {ticket_key} and {date} are replaced.
+plan_filename_template = "{ticket_key}-solution-plan.md"
+
+# Commit the plan in the resolved output repo after approval:
+#   "ask"    — confirm once before committing/pushing.
+#   "always" — commit + push on approval (still gated by the default-branch guard).
+#   "never"  — write the file only; do not commit.
+commit_plan = "ask"
+
+# Commit message for the plan commit. {ticket_key} is replaced.
+plan_commit_message_template = "docs: solution plan for {ticket_key}"
+
+# Post the approved solution summary back to the Jira ticket as a comment.
+# false = never touch Jira (default). true = offer it as a gated final step.
+write_back_jira = false
+
+# Skill to recommend for implementation after the plan is approved.
+handoff_skill = "bmad-dev-story"
+
+# Apply behavior after approval: "ask" confirms once more before writing the
+# plan; "on_approval" writes immediately when the user approves the draft.
+apply_mode = "on_approval"
+
+on_complete = ""
