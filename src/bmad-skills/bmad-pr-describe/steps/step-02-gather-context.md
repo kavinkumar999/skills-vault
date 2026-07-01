@@ -74,16 +74,20 @@
    - Collect candidate files: `{story_file}` (always, when found) plus every match of `{workflow.artifact_sources}` resolved under `{implementation_artifacts}` (substitute `{pr_number}` and `{story_id}` in the globs; skip patterns that match nothing). **Exclude this skill's own describe report** (`pr-{pr_number}-describe.md`) from the candidates — it is written in Step 5 *after* this classification, so linking it is circular (it is just a copy of the PR body).
    - **Resolve the artifacts git repo** (do this before classifying files):
      - Follow `{implementation_artifacts}` through any symlink to `{artifacts_repo_root}` (`readlink` / `realpath`).
-     - If `{artifacts_repo_root}` is a git work tree (`git -C {artifacts_repo_root} rev-parse --show-toplevel`), set `{artifacts_external_repo}: true` and resolve:
-       - `{artifacts_remote_url}` = `git -C {artifacts_repo_root} remote get-url origin` (HALT and ask if missing — artifacts cannot be linked without a remote)
+     - Resolve both git toplevels and compare them — a folder inside the PR repo is *also* a git work tree, so "is it a git repo" is **not** the test; "is it a **different** repo" is:
+       - `{artifacts_toplevel}` = `git -C {artifacts_repo_root} rev-parse --show-toplevel` (empty/error → the artifacts path is not under git at all; treat as untrackable and fall through to the `false` branch)
+       - `{pr_toplevel}` = `git -C {project-root} rev-parse --show-toplevel`
+     - **External** — `{artifacts_toplevel}` is non-empty and **differs from** `{pr_toplevel}`. Set `{artifacts_external_repo}: true` and resolve:
+       - `{artifacts_remote_url}` = `git -C {artifacts_toplevel} remote get-url origin` (HALT and ask if missing — artifacts cannot be linked without a remote)
        - `{artifacts_owner}`, `{artifacts_repo}` — parse from the GitHub SSH/HTTPS origin
-       - `{artifacts_branch}` = current branch in that repo (`git -C {artifacts_repo_root} branch --show-current`)
-       - `{artifacts_commit_target}` = `{artifacts_repo_root}` — all commits and pushes for BMad artifacts happen **here**, not on the PR branch
-     - If `{implementation_artifacts}` is not a separate git repo (plain folder inside the PR repo), set `{artifacts_external_repo}: false` and `{artifacts_commit_target}` = the PR repo root — links use `{owner}/{repo}` and `{head_branch}` as before.
+       - `{artifacts_branch}` = current branch in that repo (`git -C {artifacts_toplevel} branch --show-current`)
+       - `{artifacts_commit_target}` = `{artifacts_toplevel}` — all commits and pushes for BMad artifacts happen **here**, not on the PR branch
+     - **Not external** — `{artifacts_toplevel}` is empty or **equals** `{pr_toplevel}` (plain folder inside the PR repo). Set `{artifacts_external_repo}: false` and `{artifacts_commit_target}` = the PR repo root — links use `{owner}/{repo}` and `{head_branch}` as before.
    - When `{workflow.commit_artifacts}` is true, classify each artifact path (always relative to `{artifacts_repo_root}` when external, else relative to the PR repo):
      - **Already committed and pushed** — clean `git status` in `{artifacts_commit_target}` **and** the commit is on origin (`git -C {artifacts_commit_target} status -sb` shows no "ahead" count for the branch). A clean tree with un-pushed local commits is **not** linkable yet → treat as "new or modified". When confirmed pushed → nothing to do; link directly.
      - **New or modified** → add to `{artifacts_to_commit}` with `repo_path` = path relative to `{artifacts_commit_target}` (dry-check with `git -C {artifacts_commit_target} add --dry-run`; do **not** commit or push yet — Step 5 after approval).
      - **Untrackable** in `{artifacts_commit_target}` (`git check-ignore -v`, or outside that work tree) → resolve per `{workflow.uncommitted_artifacts}` (`embed` / `mention` / `skip`). Tell the user which file failed and why.
+   - **Secrets scan the artifact contents** (when `{workflow.secrets_scan}` is true): before finalizing `{artifacts_to_commit}`, scan the **full contents** of each file to be committed (not just a diff) with the same patterns as item 5, plus `{workflow.secrets_patterns}`. Artifacts are pushed verbatim to the output repo — which is frequently more visible than the PR branch — so a secret pasted into a story file or review note leaks on push. **Any hit → HALT** with `file:line` and the masked match; do not draft or push until the user removes it or confirms a false positive (record which in the report). This gate is independent of the diff scan — a clean diff does not clear the artifacts.
    - Build `{bmad_artifacts}`: `name`, `repo_path`, `attach_as: link | embed | mention`, `pending_commit: true/false`.
    - **Link URLs** (deterministic once `{artifacts_branch}` / `{head_branch}` is known):
      - External repo: `https://github.com/{artifacts_owner}/{artifacts_repo}/blob/{artifacts_branch}/<repo_path>` per file

@@ -81,7 +81,7 @@ Step-file architecture — same discipline as `bmad-copilot-review-closure`:
 
 - **NEVER** apply a PR body or create a PR without explicit user approval of the shown draft
 - **NEVER** state anything in the description the diff does not support — no invented test results, no claimed coverage without evidence
-- **NEVER** publish while the secrets scan has unconfirmed findings — a hit halts the workflow until removed or confirmed false positive
+- **NEVER** publish or push while the secrets scan has unconfirmed findings — the scan covers both the PR diff and the full contents of every artifact committed to the output repo; a hit halts the workflow until removed or confirmed false positive
 - **NEVER** apply a PR title or commit without `{ticket_key}` (any Jira key matching `{workflow.ticket_pattern}`, e.g. NCC-1234 or PLAT-42) — ask for the ticket if it cannot be extracted
 - **ALWAYS** respect the repo's `PULL_REQUEST_TEMPLATE.md` when present — its headings and checkboxes win over `{workflow.sections}`
 - **NEVER** delete hand-written content outside the `{workflow.body_marker_begin}` / `{workflow.body_marker_end}` markers — generated content lives between them; everything outside is the user's
