@@ -4,11 +4,12 @@ Custom skills kept outside the BMAD-METHOD repo so upstream pulls stay clean.
 
 ## Skills
 
+- **bmad-jira-ticket-solution** (`JT`) — Analyze a Jira ticket against the codebase and produce a verified, read-only **solution plan** (problem, root cause with file:line evidence, approach, ACs, test plan, risks). Hands off to a dev skill; does not write code.
 - **bmad-pr-describe** (`PD`) — Generate or refresh the PR description from the diff, story file, and test evidence: summary, AC mapping, checklist. Runs before requesting review.
 - **bmad-copilot-review-closure** (`CP`) — Triage unresolved Copilot PR comments: fix or defer, reply, and resolve threads.
 - **bmad-pr-reviewer-response** (`RB`) — Address human reviewer PR feedback: validate blockers, fix code or PR body, post issue/resolution replies.
 
-Together they cover the PR lifecycle: **PD** (describe) → **CP** (Copilot review) → **RB** (human review).
+Together they span ticket → review: **JT** (solution plan) → *(implement)* → **PD** (describe) → **CP** (Copilot review) → **RB** (human review).
 
 ## Install
 
