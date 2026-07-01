@@ -69,15 +69,26 @@
 
    - If the change is UI-facing, ask the user for screenshot paths or URLs to embed (one short question). Otherwise plan to omit the screenshots section.
 
-10. **BMad artifacts (commit-and-link):**
+10. **BMad artifacts (commit in output repo, link via origin):**
 
-   - Collect candidate files: `{story_file}` (always, when found) plus every match of `{workflow.artifact_sources}` resolved under `{implementation_artifacts}` (substitute `{pr_number}` and `{story_id}` in the globs; skip patterns that match nothing).
-   - Resolve each path **through symlinks to its in-repo location** (`git ls-files` / the symlink target inside the repo) — the artifacts folder is typically reachable via a tracked symlink, and links must use the path git actually tracks.
-   - When `{workflow.commit_artifacts}` is true, classify each artifact:
-     - **Already committed and unchanged** → nothing to do; link directly.
-     - **New or modified** → add to `{artifacts_to_commit}` (dry-check with `git add --dry-run`; do **not** commit or push yet — that happens in Step 5 after the user approves).
-     - **Untrackable** (gitignored, outside the repo) → fall back per `{workflow.uncommitted_artifacts}` (`embed` truncated to `{workflow.embed_max_chars}`, `mention`, or `skip`) and tell the user which file and why.
-   - Build `{bmad_artifacts}`: `name`, `repo_path`, `attach_as: link | embed | mention`, `pending_commit: true/false`. Link URLs are deterministic before the push: `https://github.com/{owner}/{repo}/blob/{head_branch}/<repo_path>` per file, plus one **tree URL** to the artifacts directory itself as the "all BMad output for this PR" reference.
+   - Collect candidate files: `{story_file}` (always, when found) plus every match of `{workflow.artifact_sources}` resolved under `{implementation_artifacts}` (substitute `{pr_number}` and `{story_id}` in the globs; skip patterns that match nothing). **Exclude this skill's own describe report** (`pr-{pr_number}-describe.md`) from the candidates — it is written in Step 5 *after* this classification, so linking it is circular (it is just a copy of the PR body).
+   - **Resolve the artifacts git repo** (do this before classifying files):
+     - Follow `{implementation_artifacts}` through any symlink to `{artifacts_repo_root}` (`readlink` / `realpath`).
+     - If `{artifacts_repo_root}` is a git work tree (`git -C {artifacts_repo_root} rev-parse --show-toplevel`), set `{artifacts_external_repo}: true` and resolve:
+       - `{artifacts_remote_url}` = `git -C {artifacts_repo_root} remote get-url origin` (HALT and ask if missing — artifacts cannot be linked without a remote)
+       - `{artifacts_owner}`, `{artifacts_repo}` — parse from the GitHub SSH/HTTPS origin
+       - `{artifacts_branch}` = current branch in that repo (`git -C {artifacts_repo_root} branch --show-current`)
+       - `{artifacts_commit_target}` = `{artifacts_repo_root}` — all commits and pushes for BMad artifacts happen **here**, not on the PR branch
+     - If `{implementation_artifacts}` is not a separate git repo (plain folder inside the PR repo), set `{artifacts_external_repo}: false` and `{artifacts_commit_target}` = the PR repo root — links use `{owner}/{repo}` and `{head_branch}` as before.
+   - When `{workflow.commit_artifacts}` is true, classify each artifact path (always relative to `{artifacts_repo_root}` when external, else relative to the PR repo):
+     - **Already committed and pushed** — clean `git status` in `{artifacts_commit_target}` **and** the commit is on origin (`git -C {artifacts_commit_target} status -sb` shows no "ahead" count for the branch). A clean tree with un-pushed local commits is **not** linkable yet → treat as "new or modified". When confirmed pushed → nothing to do; link directly.
+     - **New or modified** → add to `{artifacts_to_commit}` with `repo_path` = path relative to `{artifacts_commit_target}` (dry-check with `git -C {artifacts_commit_target} add --dry-run`; do **not** commit or push yet — Step 5 after approval).
+     - **Untrackable** in `{artifacts_commit_target}` (`git check-ignore -v`, or outside that work tree) → resolve per `{workflow.uncommitted_artifacts}` (`embed` / `mention` / `skip`). Tell the user which file failed and why.
+   - Build `{bmad_artifacts}`: `name`, `repo_path`, `attach_as: link | embed | mention`, `pending_commit: true/false`.
+   - **Link URLs** (deterministic once `{artifacts_branch}` / `{head_branch}` is known):
+     - External repo: `https://github.com/{artifacts_owner}/{artifacts_repo}/blob/{artifacts_branch}/<repo_path>` per file
+     - PR repo: `https://github.com/{owner}/{repo}/blob/{head_branch}/<repo_path>` per file
+     - Tree link for "all BMad output": the `{implementation_artifacts}` folder in the output repo — `https://github.com/{artifacts_owner}/{artifacts_repo}/tree/{artifacts_branch}/<relative_tree_path>` when external; PR-repo equivalent otherwise. Use the path as it appears from the output repo root (follow the symlink name only when documenting for the user; URLs always target the repo that was committed).
 
 11. **Existing hand-written content:**
 

@@ -16,19 +16,29 @@
 
 When `{artifacts_to_commit}` is non-empty (approved in Step 4):
 
-```bash
-git add <artifact files>
-git commit -m "<rendered artifact_commit_message_template>"   # includes {ticket_key} — e.g. "docs: add BMad artifacts for PR #42 [NCC-1234]"
-git push
-```
+**Default-branch guard (external repo only):** when `{artifacts_external_repo}` is true and `{artifacts_branch}` is the output repo's default/shared branch (`main`/`master`, or it has branch protection), pushing BMad artifacts straight to it is a surprising side effect. Confirm with the user once before pushing — *BMad artifacts will be committed and pushed to `{artifacts_branch}` of `{artifacts_remote_url}`. Proceed?* — unless the user already approved this target explicitly in Step 4. **HALT** until confirmed.
 
-Verify the push succeeded (`git status` clean, branch up to date with remote). If it fails, **stop** — do not publish a body whose artifact links would 404. After pushing, spot-check one link target exists:
+Commit and push in **`{artifacts_commit_target}`** — the symlinked BMad output repo when `{artifacts_external_repo}` is true, otherwise the PR repo. Sync with origin first so a shared branch doesn't reject the push:
 
 ```bash
-gh api repos/{owner}/{repo}/contents/<repo_path>?ref={head_branch} --jq .name
+git -C "{artifacts_commit_target}" fetch origin "{artifacts_branch}"
+git -C "{artifacts_commit_target}" pull --rebase origin "{artifacts_branch}"   # external/shared repo; skip if nothing to track
+git -C "{artifacts_commit_target}" add <files ...>
+git -C "{artifacts_commit_target}" commit -m "<rendered artifact_commit_message_template>"
+git -C "{artifacts_commit_target}" push origin "{artifacts_branch}"
 ```
 
-If git refuses a file (ignored path), downgrade that row per `{workflow.uncommitted_artifacts}`, adjust the body, and tell the user.
+If the push is rejected (non-fast-forward), re-run the fetch+rebase and retry once; if it still fails, **stop** and tell the user — do not publish links that would 404. When `{artifacts_external_repo}` is true, verify `{artifacts_remote_url}` is set. Re-read `{artifacts_owner}`, `{artifacts_repo}`, and `{artifacts_branch}` after push if the branch was newly created.
+
+Verify the push succeeded (`git -C "{artifacts_commit_target}" status` clean, branch up to date with remote — **not** merely committed locally). If it fails, **stop** — do not publish a body whose artifact links would 404. Spot-check one link target exists:
+
+```bash
+gh api "repos/{artifacts_owner}/{artifacts_repo}/contents/<repo_path>?ref={artifacts_branch}" --jq .name
+```
+
+(Use `{owner}/{repo}` and `{head_branch}` when `{artifacts_external_repo}` is false.)
+
+If git refuses to track a file in `{artifacts_commit_target}`, downgrade that row per `{workflow.uncommitted_artifacts}` (`embed`/`mention`/`skip`), adjust the body, and tell the user.
 
 ### Phase A — Publish
 
@@ -87,7 +97,7 @@ Create or update `{report_path}` (make the `pr-reviews/` directory if needed):
 > - Sections: {list rendered}
 > - ACs mapped: {n}/{total} (story: {story_file or "none"})
 > - Evidence: {source}
-> - Artifacts: {n} linked ({m} committed in {sha}), {k} fallback
+> - Artifacts: {n} linked ({m} committed in {sha} to {artifacts_remote_url or PR origin}), {k} fallback
 
 Offer next steps: mark the PR ready for review (`gh pr ready`), request reviewers, or run `bmad-copilot-review-closure` once Copilot has reviewed.
 
